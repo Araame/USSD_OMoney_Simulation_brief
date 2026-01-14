@@ -135,7 +135,7 @@ def show_menu_according_option(option, sub_option) :
                         while True:
                             try:
                                 amount = int(input("Please enter the amount : "))
-                                with open("balance.json", "r") as file:
+                                with open("balance.json", "w") as file:
                                     content_string = file.read()
                                     content = json.loads(content_string)
                                 if balance["solde"] >= amount :
