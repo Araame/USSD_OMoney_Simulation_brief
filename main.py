@@ -144,7 +144,7 @@ def show_menu_according_option(option, sub_option) :
                                         print(f"Transfer done to {number_call_filtered}\n")
                                         update_json_file()
                                         try:
-                                            with open("transfer_historic.json", "w") as file:
+                                            with open("transfer_historic.json", "a") as file:
                                                 json.dump(transfer_list,file)
                                         except json.JSONDecodeError:
                                              print("Json Decodage error")
