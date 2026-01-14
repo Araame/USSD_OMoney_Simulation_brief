@@ -10,17 +10,16 @@ transfer_amount_dict = {}
 transfer_details = {}
 transfer_list = []
 
-
+filename = "balance.json"
 
 def retrieve_json_file():
     """Retrieving balance state"""
-
-    if os.path.exists("balance.json"):
-        with open("balance.json", "r") as file:
-            content = file.read()
-            return json.loads(content)
+    if os.path.exists(filename):
+            with open(filename, "r") as file:
+                content = file.read()
+                return json.loads(content)
     else:
-         return {"solde": 10000}
+            return {"solde": 10000}
 
 
 #Money balance initialistion
@@ -29,10 +28,11 @@ balance = retrieve_json_file()
 
 def update_json_file():
     """ Dumping datas to balance.json file"""
-
-    with open("balance.json", "w") as file:
-        json.dump(balance,file)
-
+    try:
+        with open("balance.json", "w+") as file:
+            json.dump(balance,file)
+    except Exception as e:
+        print(e)
 
 
 def show_main_menu():
@@ -74,7 +74,7 @@ def show_sub_menu(ussd_code, option):
                 "1. National transfer\n" \
                 "2. International transfer\n" \
                 "3. Undo last transfer\n"
-                "4. Historic"
+                "4. Historic\n"
                 "0. Exit\n" \
                 "9. Back to the main menu\n")
             case 4:
@@ -90,17 +90,13 @@ def show_sub_menu(ussd_code, option):
                 show_main_menu()
             
 
-
-
 def show_menu_according_option(option, sub_option) :
     """Show menu according to the option"""
     if option == 1:
         match sub_option:
             case 1:
-                with open("balance.json", "r") as file:
-                    content_string = file.read()
-                    content = json.loads(content_string)
-                print(f"Balance : {content["solde"]}")
+                retrieve_json_file()
+                print(f"Balance : {balance["solde"]}")
                 update_json_file()
             case 9:
                 show_sub_menu(ussd_code, option)
@@ -112,9 +108,7 @@ def show_menu_according_option(option, sub_option) :
             case 1:
                 try:
                     credit_amount = int(input("How much would you like to buy for credit ? Amount : "))
-                    with open("balance.json", "r") as file:
-                        content_string = file.read()
-                        content = json.loads(content_string)
+                    retrieve_json_file()
                     if balance["solde"] >= credit_amount:
                         balance["solde"] -= credit_amount
                         print(f"Success ! Balance : {balance["solde"]}")
@@ -130,24 +124,22 @@ def show_menu_according_option(option, sub_option) :
             case 1:
                     number_call_entered = input("Please enter the number that you would like to send money\n Tel : ")
                     number_call_filtered = number_call_entered.strip()
-                    print(number_call_filtered)
                     if (len(number_call_filtered) == 9) & number_call_filtered.startswith("7"):
                         while True:
                             try:
                                 amount = int(input("Please enter the amount : "))
-                                with open("balance.json", "w") as file:
-                                    content_string = file.read()
-                                    content = json.loads(content_string)
+                                retrieve_json_file()
                                 if balance["solde"] >= amount :
                                     secret_code = int(input("Please enter your secret code\n"))
                                     if secret_code == code_pin:
-                                        date = str(datetime.now())
+                                        now = datetime.now()
+                                        formatted_time = now.strftime("%d-%m-%Y %H:%M:%S")
                                         balance["solde"] -= amount
                                         transfer_amount_dict[balance["solde"]] = amount
                                         print(transfer_amount_dict)
                                         transfer_details["amount"] = amount
                                         transfer_details["receiver"] = number_call_filtered
-                                        transfer_details["datetime"] = date
+                                        transfer_details["datetime"] = formatted_time
                                         transfer_list.append(transfer_details)
                                         print(f"Transfer done to {number_call_filtered}\n")
                                         update_json_file()
@@ -182,28 +174,30 @@ def show_menu_according_option(option, sub_option) :
         
 
     elif option == 4:
-        with open("balance.json", "r") as file:
-                    content_string = file.read()
-                    content = json.loads(content_string)
+        retrieve_json_file()
+        actual_balance = balance["solde"]
         match sub_option:
-            
             case 1:
-                if balance["solde"] >= 500:
-                    print(f"Success ! Balance : {balance["solde"] - 500}")
+                if  actual_balance >= 500:
+                    balance["solde"] -= 500
+
+                    print(f"Success ! Balance : {balance["solde"]}")
                     update_json_file()
 
                 else:
                     print("Not enough balance!")
             case 2:
                 if balance["solde"] >= 1000:
-                    print(f"Success ! Balance : {balance["solde"] - 1000}")
+                    balance["solde"] -= 1000
+                    print(f"Success ! Balance : {actual_balance - 1000}")
                     update_json_file()
 
                 else:
                     print("Not enough")
             case 3: 
-                if balance["solde"] >= 2000:
-                    print(f"Success ! Balance : {balance["solde"] - 2000}")
+                if actual_balance >= 2000:
+                    balance["solde"] -= 2000
+                    print(f"Success ! Balance : {actual_balance - 2000}")
                     update_json_file()
 
                 else:
@@ -212,9 +206,7 @@ def show_menu_according_option(option, sub_option) :
 
 #Undo or confirm transfer option
 def undo_confirm():
-            with open("balance.json", "r") as file:
-                    content_string = file.read()
-                    content = json.loads(content_string)
+            retrieve_json_file()
             option = int(input("Undo the last transfer. Press 1 to undo it :"))
             if option == 1 and len(transfer_amount_dict) != 0 :
                     last_transfer = list(transfer_amount_dict.keys())[-1]
@@ -232,14 +224,18 @@ def retrieve_transfer_historic():
     """Shows transfer historic"""
     try:
         if os.path.exists("transfer_historic.json"):
-            with open("transfer_historic.json", "r") as file:
+            with open("transfer_historic.json", "r+") as file:
                 content = file.read()
                 content_str = json.loads(content)
         print("====HISTORIC====\n")
         for i in content_str:
-                print(f"{i}\n")
-                print(f"{i}\n")
-                print(f"{i}\n")
+            print("====")
+            for key, value in i.items():
+                if i.items() == transfer_amount_dict:
+                    print(f"{key}: {value} annulee\n")
+                print(f"{key}: {value}\n")
+                
+
                 
     except json.JSONDecodeError:
         print("Json Decodage error")
@@ -263,7 +259,7 @@ while True :
             show_main_menu()
         break
 
-
+#Choosing an option
     while True:
         try:
             option = int(input("\nPlease choose an option : "))
@@ -277,7 +273,7 @@ while True :
 
 
     
-
+#Choosing a sub_option
     while True:
         try:
             sub_option = int(input("\n Please choose an option : "))
