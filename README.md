@@ -20,7 +20,7 @@ OrangeMOney's USSD Simulation
 
 ## Lessons Learned
 
-While building this project,I learn how  :
+While building this project,I learn how to  :
 - use json module on python's project for retrieving and dumping datas into a json file
 - modify datas that are stored into a json file
 - make a submenu related to a main menu
